@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moodify</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0a0a0a;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: #fff;
+      min-height: 100vh;
+    }
+
+    .app {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .header h1 {
+      font-size: 36px;
+      font-weight: 800;
+      color: #1DB954;
+      letter-spacing: -1px;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: #666;
+      margin-top: 6px;
+    }
+
+    .input-wrap {
+      position: relative;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-wrap input {
+      width: 100%;
+      background: #141414;
+      border: 1px solid #2a2a2a;
+      border-radius: 30px;
+      padding: 16px 140px 16px 24px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-wrap input:focus {
+      border-color: #1DB954;
+    }
+
+    .input-wrap input::placeholder { color: #444; }
+
+    .input-wrap button {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: #1DB954;
+      border: none;
+      border-radius: 24px;
+      padding: 10px 22px;
+      color: #000;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .input-wrap button:hover { background: #1ed760; }
+    .input-wrap button:active { transform: translateY(-50%) scale(0.97); }
+    .input-wrap button:disabled { background: #333; color: #666; cursor: not-allowed; }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+      min-height: 32px;
+    }
+
+    .chip {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 13px;
+      color: #888;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .chip.active {
+      background: #1DB95420;
+      border-color: #1DB954;
+      color: #1DB954;
+    }
+
+    .vibes {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .vibe {
+      background: #141414;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .vibe.visible { opacity: 1; transform: translateY(0); }
+
+    .vibe-label {
+      font-size: 11px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 5px;
+    }
+
+    .vibe-val {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1DB954;
+      text-transform: capitalize;
+    }
+
+    .tracks-label {
+      font-size: 11px;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .tracks { display: flex; flex-direction: column; gap: 6px; }
+
+    .track {
+      background: #141414;
+      border: 1px solid #1e1e1e;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s, background 0.2s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .track.visible { opacity: 1; transform: translateY(0); }
+    .track:hover { background: #1e1e1e; border-color: #2a2a2a; }
+
+    .track-num {
+      font-size: 13px;
+      color: #444;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .track-art {
+      width: 44px;
+      height: 44px;
+      border-radius: 8px;
+      background: #222;
+      flex-shrink: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+      padding-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .bar {
+      width: 3px;
+      border-radius: 2px;
+      background: #1DB954;
+      animation: bounce 0.9s ease-in-out infinite alternate;
+    }
+
+    @keyframes bounce {
+      from { transform: scaleY(0.3); }
+      to { transform: scaleY(1); }
+    }
+
+    .track-info { flex: 1; min-width: 0; }
+
+    .track-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #eee;
+    }
+
+    .track-artist {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .track-open {
+      font-size: 12px;
+      color: #1DB954;
+      text-decoration: none;
+      border: 1px solid #1DB95440;
+      border-radius: 20px;
+      padding: 4px 12px;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+
+    .track-open:hover { background: #1DB95420; }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 3rem 0;
+      color: #444;
+      font-size: 14px;
+    }
+
+    .loading.visible { display: block; }
+
+    .eq {
+      display: inline-flex;
+      gap: 3px;
+      align-items: flex-end;
+      height: 20px;
+      margin-bottom: 10px;
+    }
+
+    .eq span {
+      width: 4px;
+      border-radius: 2px;
+      background: #1DB954;
+      animation: bounce 0.7s ease-in-out infinite alternate;
+    }
+
+    .eq span:nth-child(2) { animation-delay: 0.2s; }
+    .eq span:nth-child(3) { animation-delay: 0.1s; }
+    .eq span:nth-child(4) { animation-delay: 0.3s; }
+
+    .empty {
+      text-align: center;
+      padding: 3rem 0;
+      color: #333;
+      font-size: 14px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <h1>moodify</h1>
+    <p>describe your mood, get a playlist</p>
+  </div>
+
+  <div class="input-wrap">
+    <input id="mood-input" type="text" placeholder="I'm feeling nostalgic on a rainy Sunday..." />
+    <button id="generate-btn" onclick="generate()">generate</button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div class="vibes" id="vibes" style="display:none">
+    <div class="vibe" id="v-energy"><div class="vibe-label">energy</div><div class="vibe-val" id="v-energy-val">—</div></div>
+    <div class="vibe" id="v-tempo"><div class="vibe-label">tempo</div><div class="vibe-val" id="v-tempo-val">—</div></div>
+    <div class="vibe" id="v-sound"><div class="vibe-label">sound</div><div class="vibe-val" id="v-sound-val">—</div></div>
+    <div class="vibe" id="v-mood"><div class="vibe-label">mood</div><div class="vibe-val" id="v-mood-val">—</div></div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="eq">
+      <span style="height:8px"></span>
+      <span style="height:16px"></span>
+      <span style="height:12px"></span>
+      <span style="height:18px"></span>
+    </div>
+    <div>finding your sound...</div>
+  </div>
+
+  <div id="tracks-section" style="display:none">
+    <div class="tracks-label">suggested tracks</div>
+    <div class="tracks" id="tracks"></div>
+  </div>
+
+  <div class="empty" id="empty">type a mood above and hit generate</div>
+
+</div>
+
+<script>
+  const input = document.getElementById('mood-input');
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') generate();
+  });
+
+  async function generate() {
+    const mood = input.value.trim();
+    if (!mood) return;
+
+    const btn = document.getElementById('generate-btn');
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('tracks-section').style.display = 'none';
+    document.getElementById('vibes').style.display = 'none';
+    document.getElementById('chips').innerHTML = '';
+    document.getElementById('loading').classList.add('visible');
+
+    try {
+      const res = await fetch('http://127.0.0.1:5001/playlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mood })
+      });
+
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+
+      renderAnalysis(data.analysis);
+      renderTracks(data.tracks);
+
+    } catch (err) {
+      document.getElementById('empty').style.display = 'block';
+      document.getElementById('empty').textContent = 'something went wrong — ' + err.message;
+    } finally {
+      document.getElementById('loading').classList.remove('visible');
+      btn.disabled = false;
+      btn.textContent = 'generate';
+    }
+  }
+
+  function renderAnalysis(analysis) {
+    const chipsEl = document.getElementById('chips');
+    const labels = (analysis.moodLabel || '').split(',');
+    labels.forEach((label, i) => {
+      const chip = document.createElement('div');
+      chip.className = 'chip active';
+      chip.textContent = label.trim();
+      chip.style.animationDelay = (i * 0.08) + 's';
+      chipsEl.appendChild(chip);
+    });
+
+    document.getElementById('v-energy-val').textContent = analysis.energy || '—';
+    document.getElementById('v-tempo-val').textContent = analysis.tempo || '—';
+    document.getElementById('v-sound-val').textContent = analysis.sound || '—';
+    document.getElementById('v-mood-val').textContent = (analysis.moodLabel || '').split(',')[0].trim();
+
+    const vibesEl = document.getElementById('vibes');
+    vibesEl.style.display = 'grid';
+    setTimeout(() => {
+      vibesEl.querySelectorAll('.vibe').forEach((v, i) => {
+        setTimeout(() => v.classList.add('visible'), i * 80);
+      });
+    }, 50);
+  }
+
+  function renderTracks(tracks) {
+    const container = document.getElementById('tracks');
+    container.innerHTML = '';
+
+    tracks.forEach((track, i) => {
+      const el = document.createElement('a');
+      el.className = 'track';
+      el.href = track.url;
+      el.target = '_blank';
+
+      const barHeights = [10, 16, 12, 18];
+      const bars = barHeights.map((h, j) =>
+        `<div class="bar" style="height:${h}px;animation-delay:${j * 0.15}s"></div>`
+      ).join('');
+
+      el.innerHTML = `
+        <div class="track-num">${i + 1}</div>
+        <div class="track-art">${bars}</div>
+        <div class="track-info">
+          <div class="track-name">${track.name}</div>
+          <div class="track-artist">${track.artist}</div>
+        </div>
+        <a class="track-open" href="${track.url}" target="_blank">open</a>
+      `;
+
+      container.appendChild(el);
+
+      setTimeout(() => el.classList.add('visible'), i * 60);
+    });
+
+    document.getElementById('tracks-section').style.display = 'block';
+  }
+</script>
+</body>
+</html>
